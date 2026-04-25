@@ -1,0 +1,19 @@
+# Django Framework & Extensions
+Django>=5.0
+django-crispy-forms>=2.0
+crispy-bootstrap5>=2023.1
+
+# Environment Variables & Database
+python-dotenv>=1.0.0
+psycopg2-binary>=2.9.0
+
+# Geospatial & Map Visualizations
+geopandas>=0.14.0
+shapely>=2.0.0
+folium>=0.15.0
+
+# AI Pipeline & Satellite Data
+opencv-python-headless>=4.8.0
+sentinelhub>=3.9.0
+rasterio>=1.3.0
+pandas>=2.0.0
