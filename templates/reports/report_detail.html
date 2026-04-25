@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">Report Details #{{ report.id }}</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-danger"><i class="bi bi-crosshair"></i> {{ report.ship_name }}</h5>
+                <hr>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>Detected on:</strong> {{ report.timestamp }}</p>
+                        <p><strong>Coordinates:</strong> {{ report.latitude }}, {{ report.longitude }}</p>
+                        <p><strong>Protected Area:</strong> {{ report.area.name|default:"Open Waters (Outside Safe Zone)" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>MMSI:</strong> {{ report.mmsi|default:"Hidden/Turned Off" }}</p>
+                        <p><strong>AI Confidence:</strong> {{ report.confidence_score }}%</p>
+                        <p><strong>Current Status:</strong> {{ report.get_status_display }}</p>
+                    </div>
+                </div>
+                
+                <form method="POST" class="bg-light p-3 border rounded">
+                    {% csrf_token %}
+                    <label class="form-label fw-bold">Update Investigation Status:</label>
+                    <select name="status" class="form-select mb-3">
+                        {% for key, value in report.STATUS_CHOICES %}
+                            <option value="{{ key }}" {% if report.status == key %}selected{% endif %}>{{ value }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'reports:report_list' %}" class="btn btn-secondary">Back to List</a>
+                        <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Save Status</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
