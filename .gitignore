@@ -1,13 +1,6 @@
-# env files
 .env
-
-# virtual environment (uv)
-.venv/
+db.sqlite3
+*.sqlite3
 venv/
-
-# python cache
+.venv/
 __pycache__/
-*.pyc
-
-# notebooks checkpoints
-.ipynb_checkpoints/
