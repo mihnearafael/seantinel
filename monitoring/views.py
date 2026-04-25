@@ -4,6 +4,19 @@ import folium
 import random
 from reports.models import ProtectedArea, IllegalReport
 
+from django.http import JsonResponse
+from .ais_monitoring import API_KEY, vessels, history
+
+def vessels_view(request):
+    return JsonResponse(list(vessels.values()), safe=False)
+
+def test_env():
+    print(f"AIS KEY: {API_KEY[:4]}...")
+
+test_env()
+
+def trails_view(request):
+    return JsonResponse(history)
 
 def dashboard_map(request):
     m = folium.Map(location=[44.8, 29.2], zoom_start=8, tiles='CartoDB dark_matter')

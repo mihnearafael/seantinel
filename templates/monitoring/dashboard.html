@@ -1,7 +1,20 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<style>
+    .ship-icon {
+        font-size: 18px;
+        text-align: center;
+        transition: transform 0.2s linear;
+    }
+</style>
+
 <div class="row">
+    <!-- LEFT PANEL -->
     <div class="col-md-3">
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-dark text-white fw-bold">
@@ -9,7 +22,9 @@
             </div>
             <div class="card-body bg-light">
                 <p class="mb-1 text-muted small">Data Source:</p>
-                <p class="fw-bold text-primary"><i class="bi bi-globe-europe-africa"></i> Copernicus Sentinel-1</p>
+                <p class="fw-bold text-primary">
+                    <i class="bi bi-globe-europe-africa"></i> Copernicus Sentinel-1
+                </p>
 
                 <p class="mb-1 text-muted small">Active AI Alerts:</p>
                 <h2 class="text-danger fw-bold">{{ active_alerts }}</h2>
@@ -17,27 +32,127 @@
 
                 <form action="{% url 'monitoring:trigger_pipeline' %}" method="POST">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger w-100 fw-bold shadow-sm">
+                    <button class="btn btn-danger w-100 fw-bold shadow-sm">
                         <i class="bi bi-search"></i> SCAN DARK VESSELS
                     </button>
                 </form>
-                <small class="text-muted d-block mt-2 text-center">Uses CFAR Algorithm & AIS Fusion</small>
+
+                <small class="text-muted d-block mt-2 text-center">
+                    Uses CFAR Algorithm & AIS Fusion
+                </small>
             </div>
         </div>
-
-        {% if not user.is_authenticated %}
-        <div class="alert alert-warning shadow-sm">
-            <i class="bi bi-shield-lock"></i> <strong>Restricted Access.</strong> Log in to manage reports and confirm illegal fishing alerts.
-        </div>
-        {% endif %}
     </div>
 
+    <!-- MAP -->
     <div class="col-md-9">
         <div class="card shadow-sm border-0">
-            <div class="card-body p-0 folium-map">
-                {{ map_html|safe }}
+            <div class="card-body p-0">
+                <div id="map" style="height: 80vh;"></div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+
+// MAP INIT
+const map = L.map('map').fitBounds([
+    [42.8, 27.0],
+    [46.0, 36.0]
+]);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18
+}).addTo(map);
+
+// STATE
+let markers = {};
+let trails = {};
+let lastTrailsData = null;
+
+// ICON
+function shipIcon(course) {
+    return L.divIcon({
+        className: "ship-icon",
+        html: `<div style="transform: rotate(${course || 0}deg)">🚢</div>`,
+        iconSize: [20, 20]
+    });
+}
+
+// POPUP
+function popup(v) {
+    return `<b>MMSI:</b> ${v.mmsi}<br>
+            Speed: ${v.speed}<br>
+            Course: ${v.course}`;
+}
+
+// DRAW TRAIL
+function drawTrail(mmsi, coords) {
+
+    if (!coords || coords.length === 0) return;
+
+    if (trails[mmsi]) {
+        map.removeLayer(trails[mmsi]);
+    }
+
+    trails[mmsi] = L.polyline(coords, {
+        color: "cyan",
+        weight: 3
+    }).addTo(map);
+}
+
+// FETCH TRAILS ONCE (cache it)
+async function loadTrails() {
+    const res = await fetch('/monitoring/trails/');
+    lastTrailsData = await res.json();
+}
+
+// HANDLE CLICK
+function attachClick(mmsi) {
+    markers[mmsi].on("click", () => {
+        const coords = lastTrailsData?.[mmsi] || [];
+        drawTrail(mmsi, coords);
+    });
+}
+
+// UPDATE LOOP
+async function update() {
+    try {
+
+        const res = await fetch('/monitoring/vessels/');
+        const data = await res.json();
+
+        data.forEach(v => {
+
+            if (!markers[v.mmsi]) {
+
+                markers[v.mmsi] = L.marker([v.lat, v.lon], {
+                    icon: shipIcon(v.course)
+                })
+                .addTo(map)
+                .bindPopup(popup(v));
+
+                attachClick(v.mmsi);
+            } else {
+
+                markers[v.mmsi]
+                    .setLatLng([v.lat, v.lon])
+                    .setIcon(shipIcon(v.course))
+                    .setPopupContent(popup(v));
+            }
+        });
+
+    } catch (err) {
+        console.error("Error fetching vessels:", err);
+    }
+}
+
+// INIT
+loadTrails();
+setInterval(update, 2000);
+update();
+
+</script>
+
 {% endblock %}

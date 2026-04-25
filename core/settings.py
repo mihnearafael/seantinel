@@ -17,6 +17,11 @@ ALLOWED_HOSTS = []
 
 # Application definition
 INSTALLED_APPS = [
+    
+    "daphne",
+    "channels",
+    "monitoring",
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -24,15 +29,21 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Third-party
-    'crispy_forms',
-    'crispy_bootstrap5', # ACEASTA ESTE LINIA CARE REPARĂ EROAREA
+    # # Third-party
+    # 'crispy_forms',
+    # 'crispy_bootstrap5', # ACEASTA ESTE LINIA CARE REPARĂ EROAREA
 
     # Local Apps
     'users.apps.UsersConfig',
-    'monitoring.apps.MonitoringConfig',
+    # 'monitoring.apps.MonitoringConfig',
     'reports.apps.ReportsConfig',
+    
+     
+    
+
 ]
+
+ASGI_APPLICATION = "core.asgi.application"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
