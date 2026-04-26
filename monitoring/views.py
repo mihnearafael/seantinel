@@ -38,7 +38,7 @@ from django.http import HttpResponse
 
 @login_required
 def proxy_map_image(request):
-    colab_url = getattr(settings, 'COLAB_API_URL', 'https://crazy-toys-carry.loca.lt')
+    colab_url = getattr(settings, 'COLAB_API_URL', 'https://chubby-sheep-grin.loca.lt')
     try:
         res = requests.get(f"{colab_url}/api/map-image", headers={'Bypass-Tunnel-Reminder': 'true'}, timeout=15)
         return HttpResponse(res.content, content_type=res.headers.get('Content-Type', 'image/png'))
@@ -48,7 +48,7 @@ def proxy_map_image(request):
 @login_required
 def trigger_mock_pipeline(request):
     if request.method == 'POST':
-        colab_url = getattr(settings, 'COLAB_API_URL', 'https://crazy-toys-carry.loca.lt')
+        colab_url = getattr(settings, 'COLAB_API_URL', 'https://chubby-sheep-grin.loca.lt')
         try:
             res = requests.get(f"{colab_url}/api/scan", headers={'Bypass-Tunnel-Reminder': 'true'}, timeout=120)
             data = res.json()

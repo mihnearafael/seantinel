@@ -46,3 +46,14 @@ db.sqlite3-journal
 # OS
 .DS_Store
 Thumbs.db
+
+# Jupyter Notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Project Data / Temporary Files
+sat_pipeline
+media/
+static/
+node_modules/
+.gemini/
