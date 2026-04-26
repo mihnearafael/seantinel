@@ -11,35 +11,61 @@
         text-align: center;
         transition: transform 0.2s linear;
     }
+    #sarCarousel {
+        background: #000;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .carousel-item img {
+        max-height: 400px;
+        object-fit: contain;
+        width: 100%;
+    }
 </style>
 
 <div class="row">
     <!-- LEFT PANEL -->
     <div class="col-md-3">
-        <div class="card shadow-sm border-0 mb-4">
+        <div class="card shadow-sm border-0 mb-4 h-100">
             <div class="card-header bg-dark text-white fw-bold">
-                <i class="bi bi-radar"></i> Radar Controls
+                <i class="bi bi-radar"></i> Controale Radar
             </div>
-            <div class="card-body bg-light">
-                <p class="mb-1 text-muted small">Data Source:</p>
+            <div class="card-body">
+                <p class="mb-1 text-muted small">Sursă Date:</p>
                 <p class="fw-bold text-primary">
                     <i class="bi bi-globe-europe-africa"></i> Copernicus Sentinel-1
                 </p>
 
-                <p class="mb-1 text-muted small">Active AI Alerts:</p>
-                <h2 class="text-danger fw-bold">{{ active_alerts }}</h2>
+                <p class="mb-1 text-muted small">Alerte AI Active:</p>
+                <h2 class="text-danger fw-bold" id="alertsCount">{{ active_alerts }}</h2>
                 <hr>
 
-                <form action="{% url 'monitoring:trigger_pipeline' %}" method="POST">
+                {% if user.is_authenticated %}
+                <form id="scanForm" action="{% url 'monitoring:trigger_pipeline' %}" method="POST">
                     {% csrf_token %}
-                    <button class="btn btn-danger w-100 fw-bold shadow-sm">
-                        <i class="bi bi-search"></i> SCAN DARK VESSELS
+                    <button id="scanBtn" class="btn btn-danger w-100 fw-bold shadow-sm py-2">
+                        <i class="bi bi-search"></i> <span id="scanText">SCANEAZĂ NAVE SUSPECTE</span>
                     </button>
                 </form>
+                
+                <button id="generateReportBtn" class="btn btn-success w-100 fw-bold shadow-sm mt-3 py-2 d-none">
+                    <i class="bi bi-file-earmark-check"></i> GENEREAZĂ RAPORT
+                </button>
+                
+                <div id="scanStatus" class="mt-3 text-center text-info" style="display: none;">
+                    <small><i class="spinner-border spinner-border-sm"></i> Conectare la Colab AI...</small>
+                </div>
+                {% else %}
+                <div class="alert alert-warning py-3 mb-0 text-center shadow-sm">
+                    <small><i class="bi bi-lock-fill"></i> Vă rugăm să vă autentificați pentru a accesa Scanerul Radar SAR.</small>
+                </div>
+                {% endif %}
 
-                <small class="text-muted d-block mt-2 text-center">
-                    Uses CFAR Algorithm & AIS Fusion
-                </small>
+                <div class="mt-auto pt-4">
+                    <small class="text-muted d-block text-center">
+                        Utilizează Algoritmul CFAR și Fuziunea AIS
+                    </small>
+                </div>
             </div>
         </div>
     </div>
@@ -48,7 +74,7 @@
     <div class="col-md-9">
         <div class="card shadow-sm border-0">
             <div class="card-body p-0">
-                <div id="map" style="height: 80vh;"></div>
+                <div id="map" style="height: 85vh;"></div>
             </div>
         </div>
     </div>
@@ -57,19 +83,26 @@
 <script>
 
 // MAP INIT
-const map = L.map('map').fitBounds([
-    [42.8, 27.0],
-    [46.0, 36.0]
-]);
+// Initializing bounds for the Black Sea (RO-BG area from the colab script)
+const mapBounds = [
+    [42.0, 27.4], // South-West
+    [43.8, 30.5]  // North-East
+];
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18
+const map = L.map('map').fitBounds(mapBounds);
+
+L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '&copy; CartoDB'
 }).addTo(map);
 
 // STATE
 let markers = {};
 let trails = {};
 let lastTrailsData = null;
+let imageCounter = 0;
+let sarMarkers = [];
+let lastScannedShips = [];
 
 // ICON
 function shipIcon(course) {
@@ -79,23 +112,27 @@ function shipIcon(course) {
         iconSize: [20, 20]
     });
 }
+function alertIcon() {
+    return L.divIcon({
+        className: "ship-icon",
+        html: `<div>🔴</div>`,
+        iconSize: [20, 20]
+    });
+}
 
 // POPUP
 function popup(v) {
     return `<b>MMSI:</b> ${v.mmsi}<br>
-            Speed: ${v.speed}<br>
-            Course: ${v.course}`;
+            Viteză: ${v.speed}<br>
+            Curs: ${v.course}`;
 }
 
 // DRAW TRAIL
 function drawTrail(mmsi, coords) {
-
     if (!coords || coords.length === 0) return;
-
     if (trails[mmsi]) {
         map.removeLayer(trails[mmsi]);
     }
-
     trails[mmsi] = L.polyline(coords, {
         color: "cyan",
         weight: 3
@@ -116,17 +153,14 @@ function attachClick(mmsi) {
     });
 }
 
-// UPDATE LOOP
+// UPDATE LOOP (AIS)
 async function update() {
     try {
-
         const res = await fetch('/monitoring/vessels/');
         const data = await res.json();
 
         data.forEach(v => {
-
             if (!markers[v.mmsi]) {
-
                 markers[v.mmsi] = L.marker([v.lat, v.lon], {
                     icon: shipIcon(v.course)
                 })
@@ -135,23 +169,150 @@ async function update() {
 
                 attachClick(v.mmsi);
             } else {
-
                 markers[v.mmsi]
                     .setLatLng([v.lat, v.lon])
                     .setIcon(shipIcon(v.course))
                     .setPopupContent(popup(v));
             }
         });
-
     } catch (err) {
         console.error("Error fetching vessels:", err);
     }
 }
 
+// TOAST NOTIFICATIONS
+function showNotification(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer') || (function() {
+        const div = document.createElement('div');
+        div.id = 'toastContainer';
+        div.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        div.style.zIndex = '1055';
+        document.body.appendChild(div);
+        return div;
+    })();
+
+    const toastEl = document.createElement('div');
+    toastEl.className = `toast align-items-center text-bg-${type} border-0`;
+    toastEl.setAttribute('role', 'alert');
+    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-atomic', 'true');
+
+    toastEl.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body fw-bold">
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toastEl);
+    const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+    toast.show();
+    
+    toastEl.addEventListener('hidden.bs.toast', () => {
+        toastEl.remove();
+    });
+}
+
+// AJAX SCAN FORM
+document.getElementById('scanForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('scanBtn');
+    const status = document.getElementById('scanStatus');
+    const btnText = document.getElementById('scanText');
+    
+    btn.disabled = true;
+    btnText.innerText = "PROCESARE SAR...";
+    status.style.display = 'block';
+    
+    try {
+        const response = await fetch(this.action, {
+            method: 'POST',
+            body: new FormData(this),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification("Scanare completă: " + data.message, 'success');
+            
+            // clear old markers
+            sarMarkers.forEach(m => map.removeLayer(m));
+            sarMarkers = [];
+            lastScannedShips = data.ships || [];
+            
+            // Add markers for the detected ships
+            if(data.ships) {
+                data.ships.forEach(ship => {
+                    let m = L.marker([ship.lat, ship.lon], {icon: shipIcon(0)})
+                        .addTo(map)
+                        .bindPopup(`<b>NAVĂ SUSPECTĂ (SAR)</b><br>Încredere: ${ship.confidence}%`);
+                    sarMarkers.push(m);
+                });
+                // refresh the number of scanned vessels
+                document.getElementById('alertsCount').innerText = data.ships.length;
+            } else {
+                document.getElementById('alertsCount').innerText = "0";
+            }
+            
+            if(lastScannedShips.length > 0) {
+                document.getElementById('generateReportBtn').classList.remove('d-none');
+            } else {
+                document.getElementById('generateReportBtn').classList.add('d-none');
+            }
+            
+        } else {
+            showNotification("Eroare: " + data.message, 'danger');
+        }
+    } catch (err) {
+        console.error(err);
+        showNotification("Eroare de conectare la backend/Colab AI.", 'danger');
+    } finally {
+        btn.disabled = false;
+        btnText.innerText = "SCANEAZĂ NAVE SUSPECTE";
+        status.style.display = 'none';
+    }
+});
+
+// GENERATE REPORT BTN
+document.getElementById('generateReportBtn').addEventListener('click', async function() {
+    this.disabled = true;
+    this.innerHTML = '<i class="spinner-border spinner-border-sm"></i> GENERARE...';
+    
+    try {
+        const response = await fetch("{% url 'reports:generate_report' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ ships: lastScannedShips })
+        });
+        
+        const data = await response.json();
+        if(data.success) {
+            showNotification(data.message + " Le puteți vizualiza în Profilul dvs.", 'success');
+            this.classList.add('d-none');
+        } else {
+            showNotification("Eroare: " + data.message, 'danger');
+        }
+    } catch(err) {
+        showNotification("Generarea raportului a eșuat.", 'danger');
+    } finally {
+        this.disabled = false;
+        this.innerHTML = '<i class="bi bi-file-earmark-check"></i> GENEREAZĂ RAPORT';
+    }
+});
+
 // INIT
-loadTrails();
-setInterval(update, 2000);
-update();
+{% if user.is_authenticated %}
+// Map stays empty until user clicks Scan
+{% endif %}
 
 </script>
 

@@ -7,17 +7,25 @@ from reports.models import ProtectedArea, IllegalReport
 from django.http import JsonResponse
 from .ais_monitoring import API_KEY, vessels, history
 
+from django.contrib.auth.decorators import login_required
+
+@login_required
 def vessels_view(request):
     return JsonResponse(list(vessels.values()), safe=False)
 
 def test_env():
-    print(f"AIS KEY: {API_KEY[:4]}...")
+    if API_KEY:
+        print(f"AIS KEY: {API_KEY[:4]}...")
+    else:
+        print("AIS KEY: Not set")
 
 test_env()
 
+@login_required
 def trails_view(request):
     return JsonResponse(history)
 
+@login_required
 def dashboard_map(request):
     m = folium.Map(location=[44.8, 29.2], zoom_start=8, tiles='CartoDB dark_matter')
 
@@ -29,34 +37,47 @@ def dashboard_map(request):
             style_function=lambda x: {'fillColor': '#00ff00', 'color': '#00ff00', 'weight': 1, 'fillOpacity': 0.2}
         ).add_to(m)
 
-    reports = IllegalReport.objects.exclude(status='FALSE_ALARM')
-    for report in reports:
-        color = "red" if report.status == "CONFIRMED" else "orange"
-        folium.Marker(
-            location=[report.latitude, report.longitude],
-            popup=f"<b>{report.ship_name}</b><br>Score: {report.confidence_score}%<br>Status: {report.status}",
-            icon=folium.Icon(color=color, icon="info-sign")
-        ).add_to(m)
+    active_alerts = 0
 
     context = {
         'map_html': m._repr_html_(),
-        'active_alerts': reports.count(),
+        'active_alerts': active_alerts,
     }
     return render(request, 'monitoring/dashboard.html', context)
 
 
+import requests
+from django.conf import settings
+
+from django.http import HttpResponse
+
+@login_required
+def proxy_map_image(request):
+    colab_url = getattr(settings, 'COLAB_API_URL', 'https://crazy-toys-carry.loca.lt')
+    try:
+        res = requests.get(f"{colab_url}/api/map-image", headers={'Bypass-Tunnel-Reminder': 'true'}, timeout=15)
+        return HttpResponse(res.content, content_type=res.headers.get('Content-Type', 'image/png'))
+    except Exception as e:
+        return HttpResponse(status=500)
+
+@login_required
 def trigger_mock_pipeline(request):
     if request.method == 'POST':
-        lat = 44.5 + (random.random() * 0.8)
-        lon = 29.0 + (random.random() * 1.5)
-
-        IllegalReport.objects.create(
-            latitude=lat,
-            longitude=lon,
-            confidence_score=random.randint(80, 99),
-            status='UNCONFIRMED'
-        )
-
-        messages.success(request, f"Scanned Sentinel-1 Data. Found new dark vessel at {lat:.3f}, {lon:.3f}!")
-
-    return redirect('monitoring:dashboard')
+        colab_url = getattr(settings, 'COLAB_API_URL', 'https://crazy-toys-carry.loca.lt')
+        try:
+            res = requests.get(f"{colab_url}/api/scan", headers={'Bypass-Tunnel-Reminder': 'true'}, timeout=120)
+            data = res.json()
+            if data.get("success"):
+                ships = data.get("ships", [])
+                return JsonResponse({
+                    "success": True, 
+                    "message": f"Scanned Sentinel-1 Data. Found {len(ships)} dark vessels!",
+                    "ships": ships,
+                    "image_url": "/monitoring/proxy-map-image/"
+                })
+            else:
+                return JsonResponse({"success": False, "message": data.get("message", "Unknown Colab error")})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)})
+            
+    return JsonResponse({"success": False, "message": "Invalid method"})

@@ -29,9 +29,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # # Third-party
-    # 'crispy_forms',
-    # 'crispy_bootstrap5', # ACEASTA ESTE LINIA CARE REPARĂ EROAREA
+    # Third-party
+    'crispy_forms',
+    'crispy_bootstrap5', # ACEASTA ESTE LINIA CARE REPARĂ EROAREA
 
     # Local Apps
     'users.apps.UsersConfig',
@@ -102,4 +102,8 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/users/login/'
+LOGOUT_REDIRECT_URL = '/users/login/'
+
+# Google Colab LocalTunnel URL for SAR AI Pipeline
+COLAB_API_URL = os.getenv("COLAB_API_URL", "https://crazy-toys-carry.loca.lt")

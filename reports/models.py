@@ -12,8 +12,16 @@ class ProtectedArea(models.Model):
     def __str__(self):
         return self.name
 
+class ScanReport(models.Model):
+    reported_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    report_number = models.PositiveIntegerField(default=1)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Report #{self.report_number} on {self.timestamp}"
 
 class IllegalReport(models.Model):
+    scan_report = models.ForeignKey(ScanReport, related_name='vessels', on_delete=models.CASCADE, null=True, blank=True)
     STATUS_CHOICES = [
         ('UNCONFIRMED', 'AI Detected / Unconfirmed'),
         ('INVESTIGATING', 'Under Investigation'),
@@ -34,6 +42,9 @@ class IllegalReport(models.Model):
     confidence_score = models.IntegerField(default=0, help_text="AI Confidence Score %")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='UNCONFIRMED')
     area = models.ForeignKey(ProtectedArea, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    in_restricted_area = models.BooleanField(default=False)
+    restricted_area_name = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return f"[{self.status}] Threat at {self.latitude}, {self.longitude}"

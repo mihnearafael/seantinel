@@ -1,43 +1,65 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-dark text-white">
-                <h4 class="mb-0">Report Details #{{ report.id }}</h4>
+<div class="row justify-content-center mt-4">
+    <div class="col-md-10">
+        <div class="card shadow border-0 mb-4">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Prezentare Generală Raport #{{ report.report_number }}</h4>
+                <span class="text-light small"><i class="bi bi-clock"></i> {{ report.timestamp|date:"d M Y, H:i" }}</span>
             </div>
             <div class="card-body">
-                <h5 class="card-title text-danger"><i class="bi bi-crosshair"></i> {{ report.ship_name }}</h5>
-                <hr>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <p><strong>Detected on:</strong> {{ report.timestamp }}</p>
-                        <p><strong>Coordinates:</strong> {{ report.latitude }}, {{ report.longitude }}</p>
-                        <p><strong>Protected Area:</strong> {{ report.area.name|default:"Open Waters (Outside Safe Zone)" }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>MMSI:</strong> {{ report.mmsi|default:"Hidden/Turned Off" }}</p>
-                        <p><strong>AI Confidence:</strong> {{ report.confidence_score }}%</p>
-                        <p><strong>Current Status:</strong> {{ report.get_status_display }}</p>
-                    </div>
-                </div>
-                
-                <form method="POST" class="bg-light p-3 border rounded">
-                    {% csrf_token %}
-                    <label class="form-label fw-bold">Update Investigation Status:</label>
-                    <select name="status" class="form-select mb-3">
-                        {% for key, value in report.STATUS_CHOICES %}
-                            <option value="{{ key }}" {% if report.status == key %}selected{% endif %}>{{ value }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="d-flex justify-content-between">
-                        <a href="{% url 'reports:report_list' %}" class="btn btn-secondary">Back to List</a>
-                        <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Save Status</button>
-                    </div>
-                </form>
+                <p><strong>Total Nave Detectate:</strong> <span class="badge bg-primary fs-6">{{ report.vessels.count }}</span></p>
+                <a href="{% url 'reports:report_list' %}" class="btn btn-sm btn-secondary mt-2"><i class="bi bi-arrow-left"></i> Înapoi la Rapoarte</a>
             </div>
         </div>
+        
+        <h5 class="mb-3 text-secondary border-bottom pb-2">Detalii Nave Detectate</h5>
+        {% for vessel in report.vessels.all %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center fw-bold">
+                <span><i class="bi bi-crosshair text-danger"></i> Navă #{{ vessel.id }} - {{ vessel.ship_name }}</span>
+                {% if vessel.status == 'UNCONFIRMED' %}<span class="badge bg-warning text-dark">Neconfirmat</span>{% endif %}
+                {% if vessel.status == 'INVESTIGATING' %}<span class="badge bg-info text-dark">În Investigație</span>{% endif %}
+                {% if vessel.status == 'CONFIRMED' %}<span class="badge bg-danger">Ilegal Confirmat</span>{% endif %}
+                {% if vessel.status == 'FALSE_ALARM' %}<span class="badge bg-secondary">Alarmă Falsă</span>{% endif %}
+            </div>
+            <div class="card-body row">
+                <div class="col-md-6 border-end">
+                    <p class="mb-2"><strong>Coordonate:</strong> <span class="text-primary">{{ vessel.latitude|floatformat:4 }}, {{ vessel.longitude|floatformat:4 }}</span></p>
+                    <p class="mb-2"><strong>Zonă Restricționată:</strong> 
+                        {% if vessel.in_restricted_area %}
+                            <span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> {{ vessel.restricted_area_name }}</span>
+                        {% else %}
+                            <span class="text-muted">Nicio Restricție</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-1"><strong>Încredere AI:</strong> 
+                        <span class="badge {% if vessel.confidence_score > 80 %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                            {{ vessel.confidence_score }}%
+                        </span>
+                    </p>
+                </div>
+                <div class="col-md-6 ps-4 d-flex flex-column justify-content-center">
+                    <p class="mb-2 fw-bold text-muted small">Actualizare Status Investigație</p>
+                    <form method="POST" class="d-flex align-items-center">
+                        {% csrf_token %}
+                        <input type="hidden" name="vessel_id" value="{{ vessel.id }}">
+                        <select name="status" class="form-select me-2 shadow-sm">
+                            <option value="UNCONFIRMED" {% if vessel.status == 'UNCONFIRMED' %}selected{% endif %}>Neconfirmat</option>
+                            <option value="INVESTIGATING" {% if vessel.status == 'INVESTIGATING' %}selected{% endif %}>În Investigație</option>
+                            <option value="CONFIRMED" {% if vessel.status == 'CONFIRMED' %}selected{% endif %}>Ilegal Confirmat</option>
+                            <option value="FALSE_ALARM" {% if vessel.status == 'FALSE_ALARM' %}selected{% endif %}>Alarmă Falsă</option>
+                        </select>
+                        <button type="submit" class="btn btn-success shadow-sm"><i class="bi bi-check-circle"></i> Salvează</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info py-4 text-center">Nicio navă nu a fost detectată în acest raport.</div>
+        {% endfor %}
+        
     </div>
 </div>
 {% endblock %}

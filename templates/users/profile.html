@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row mt-4 justify-content-center">
+    <div class="col-md-3">
+        <div class="card shadow border-0 mb-4 h-100">
+            <div class="card-header bg-dark text-white fw-bold">
+                <i class="bi bi-person-circle"></i> Setări Profil
+            </div>
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title text-primary"><i class="bi bi-shield-check"></i> {{ user.username }}</h5>
+                <div class="mt-3">
+                    <p class="mb-1 text-muted small">Instituție:</p>
+                    <p class="fw-bold">{{ user.institution_name|default:"Nespecificat" }}</p>
+                    
+                    <p class="mb-1 text-muted small">Nr. Insignă:</p>
+                    <p class="fw-bold">{{ user.badge_number|default:"Nespecificat" }}</p>
+                </div>
+                
+                <hr class="mt-auto">
+                <h6 class="mb-3 text-muted">Schimbare Parolă</h6>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-primary w-100 mt-2">Actualizează Parolă</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <div class="card shadow border-0 h-100">
+            <div class="card-header bg-dark text-white fw-bold">
+                <i class="bi bi-journal-text"></i> Rapoartele Mele Generate
+            </div>
+            <div class="card-body p-0">
+                {% if reports %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID Raport</th>
+                                <th>Generat La</th>
+                                <th>Nave Detectate</th>
+                                <th>Acțiune</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in reports %}
+                            <tr>
+                                <td>#{{ report.report_number }}</td>
+                                <td>{{ report.timestamp|date:"d M Y, H:i" }}</td>
+                                <td><span class="badge bg-secondary">{{ report.vessels.count }} Nave</span></td>
+                                <td><a href="{% url 'reports:report_detail' report.id %}" class="btn btn-sm btn-outline-primary">Vezi Raport</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-5 text-center text-muted d-flex flex-column align-items-center justify-content-center h-100">
+                    <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                    <h5>Nu ați generat niciun raport încă.</h5>
+                    <p>Scanați zona pentru a detecta nave suspecte.</p>
+                    <a href="{% url 'monitoring:dashboard' %}" class="btn btn-primary mt-2">Mergi la Hartă & Scanează</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

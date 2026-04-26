@@ -1,51 +1,37 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2><i class="bi bi-journal-medical text-danger"></i> Incident Reports</h2>
+<div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+    <h2><i class="bi bi-journal-medical text-danger"></i> Rapoarte Incidente</h2>
 </div>
 
-<div class="card shadow-sm border-0">
+<div class="card shadow border-0">
     <div class="card-body p-0">
         <table class="table table-hover table-striped mb-0">
             <thead class="table-dark">
                 <tr>
-                    <th>ID</th>
-                    <th>Timestamp</th>
-                    <th>Target</th>
-                    <th>Location (Lat, Lon)</th>
-                    <th>AI Confidence</th>
-                    <th>Status</th>
-                    <th>Action</th>
+                    <th>ID Raport</th>
+                    <th>Generat La</th>
+                    <th>Nave Detectate</th>
+                    <th>Acțiune</th>
                 </tr>
             </thead>
             <tbody>
                 {% for report in reports %}
                 <tr>
-                    <td>#{{ report.id }}</td>
-                    <td>{{ report.timestamp|date:"Y-m-d H:i" }}</td>
-                    <td>{{ report.ship_name }}</td>
-                    <td>{{ report.latitude|floatformat:4 }}, {{ report.longitude|floatformat:4 }}</td>
+                    <td><span class="fw-bold">#{{ report.report_number }}</span></td>
+                    <td>{{ report.timestamp|date:"d M Y, H:i" }}</td>
+                    <td><span class="badge bg-secondary">{{ report.vessels.count }} Nave</span></td>
                     <td>
-                        <div class="progress" style="height: 20px;">
-                          <div class="progress-bar bg-danger" role="progressbar" style="width: {{ report.confidence_score }}%;">
-                              {{ report.confidence_score }}%
-                          </div>
-                        </div>
-                    </td>
-                    <td>
-                        {% if report.status == 'UNCONFIRMED' %}<span class="badge bg-warning text-dark">Unconfirmed</span>{% endif %}
-                        {% if report.status == 'INVESTIGATING' %}<span class="badge bg-info text-dark">Investigating</span>{% endif %}
-                        {% if report.status == 'CONFIRMED' %}<span class="badge bg-danger">Confirmed Illegal</span>{% endif %}
-                        {% if report.status == 'FALSE_ALARM' %}<span class="badge bg-secondary">False Alarm</span>{% endif %}
-                    </td>
-                    <td>
-                        <a href="{% url 'reports:report_detail' report.id %}" class="btn btn-sm btn-outline-primary">Review</a>
+                        <a href="{% url 'reports:report_detail' report.id %}" class="btn btn-sm btn-outline-primary">Vezi Raport</a>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="text-center py-4 text-muted">No reports generated yet. Run the AI Scanner.</td>
+                    <td colspan="4" class="text-center py-5 text-muted">
+                        <i class="bi bi-journal-x fs-1 d-block mb-3"></i>
+                        Niciun raport generat încă. Rulați scanerul AI.
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -9,7 +9,10 @@ load_dotenv()
 
 API_KEY = os.getenv("AISSTREAM_API_KEY")
 
-print(f"Using AISSTREAM_API_KEY: {API_KEY[:4]}...")
+if API_KEY:
+    print(f"Using AISSTREAM_API_KEY: {API_KEY[:4]}...")
+else:
+    print("WARNING: AISSTREAM_API_KEY is not set!")
 
 vessels = {}
 history = {}
