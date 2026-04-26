@@ -1,65 +1,209 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+    .vessel-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-glass);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.25rem;
+        animation: slideUp 0.4s ease both;
+        transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .vessel-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .status-badge-CONFIRMED    { background: linear-gradient(135deg,#ff416c,#ff4b2b); color: white; }
+    .status-badge-INVESTIGATING{ background: linear-gradient(135deg,#f093fb,#f5576c); color: white; }
+    .status-badge-UNCONFIRMED  { background: rgba(234,179,8,0.18); border: 1px solid rgba(234,179,8,0.4); color: #eab308; }
+    .status-badge-FALSE_ALARM  { background: rgba(100,116,139,0.2); border: 1px solid var(--border-glass); color: #94a3b8; }
+    .status-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 0.45rem 1rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+    .coord-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(10,132,255,0.12);
+        border: 1px solid rgba(10,132,255,0.25);
+        border-radius: 10px;
+        padding: 0.4rem 0.8rem;
+        font-family: 'Outfit', monospace;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #0a84ff;
+    }
+    .zone-tag {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(255,65,108,0.1);
+        border: 1px solid rgba(255,65,108,0.3);
+        border-radius: 10px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem; font-weight: 600;
+        color: #ff416c;
+    }
+    .confidence-bar-wrap {
+        background: rgba(255,255,255,0.07);
+        border-radius: 50px;
+        height: 8px;
+        overflow: hidden;
+        margin-top: 6px;
+    }
+    .confidence-bar {
+        height: 100%;
+        border-radius: 50px;
+        background: var(--success-gradient);
+        transition: width 1s ease;
+    }
+    .report-header-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-glass);
+        border-radius: 20px;
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    .report-header-number {
+        width: 72px; height: 72px;
+        background: var(--primary-gradient);
+        border-radius: 20px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; font-weight: 800; color: white;
+        flex-shrink: 0;
+        box-shadow: 0 4px 15px rgba(10,132,255,0.35);
+    }
+    .form-select {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid var(--border-glass);
+        border-radius: 12px;
+        padding: 0.6rem 1rem;
+        color: inherit;
+        transition: border 0.3s, box-shadow 0.3s;
+    }
+    .form-select:focus {
+        background: rgba(255,255,255,0.1);
+        border-color: #0a84ff;
+        box-shadow: 0 0 0 3px rgba(10,132,255,0.15);
+        color: inherit;
+    }
+    .section-title {
+        font-weight: 700;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #94a3b8;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-glass);
+    }
+</style>
+
 <div class="row justify-content-center mt-4">
     <div class="col-md-10">
-        <div class="card shadow border-0 mb-4">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">Prezentare Generală Raport #{{ report.report_number }}</h4>
-                <span class="text-light small"><i class="bi bi-clock"></i> {{ report.timestamp|date:"d M Y, H:i" }}</span>
+
+        <!-- Report Header -->
+        <div class="report-header-card">
+            <div class="report-header-number">#{{ report.report_number }}</div>
+            <div class="flex-grow-1">
+                <h4 class="fw-bold mb-1">Raport de Scanare Sentinel-1</h4>
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <span class="text-muted small"><i class="bi bi-clock me-1"></i>{{ report.timestamp|date:"d M Y, H:i" }}</span>
+                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(10,132,255,0.15); border: 1px solid rgba(10,132,255,0.3); color: #0a84ff;">
+                        <i class="bi bi-ship me-1"></i>{{ report.vessels.count }} Nave Detectate
+                    </span>
+                </div>
             </div>
-            <div class="card-body">
-                <p><strong>Total Nave Detectate:</strong> <span class="badge bg-primary fs-6">{{ report.vessels.count }}</span></p>
-                <a href="{% url 'reports:report_list' %}" class="btn btn-sm btn-secondary mt-2"><i class="bi bi-arrow-left"></i> Înapoi la Rapoarte</a>
-            </div>
+            <a href="{% url 'reports:report_list' %}" class="btn btn-gradient py-2 px-4 fw-bold">
+                <i class="bi bi-arrow-left me-1"></i> Înapoi
+            </a>
+            <a href="{% url 'reports:download_pdf' report.id %}" class="btn btn-danger-gradient py-2 px-4 fw-bold">
+                <i class="bi bi-file-earmark-pdf-fill me-1"></i> Descarcă PDF
+            </a>
         </div>
-        
-        <h5 class="mb-3 text-secondary border-bottom pb-2">Detalii Nave Detectate</h5>
+
+        <!-- Vessel Cards -->
+        <p class="section-title"><i class="bi bi-crosshair me-2"></i>Detalii Nave Detectate</p>
+
         {% for vessel in report.vessels.all %}
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center fw-bold">
-                <span><i class="bi bi-crosshair text-danger"></i> Navă #{{ vessel.id }} - {{ vessel.ship_name }}</span>
-                {% if vessel.status == 'UNCONFIRMED' %}<span class="badge bg-warning text-dark">Neconfirmat</span>{% endif %}
-                {% if vessel.status == 'INVESTIGATING' %}<span class="badge bg-info text-dark">În Investigație</span>{% endif %}
-                {% if vessel.status == 'CONFIRMED' %}<span class="badge bg-danger">Ilegal Confirmat</span>{% endif %}
-                {% if vessel.status == 'FALSE_ALARM' %}<span class="badge bg-secondary">Alarmă Falsă</span>{% endif %}
-            </div>
-            <div class="card-body row">
-                <div class="col-md-6 border-end">
-                    <p class="mb-2"><strong>Coordonate:</strong> <span class="text-primary">{{ vessel.latitude|floatformat:4 }}, {{ vessel.longitude|floatformat:4 }}</span></p>
-                    <p class="mb-2"><strong>Zonă Restricționată:</strong> 
-                        {% if vessel.in_restricted_area %}
-                            <span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> {{ vessel.restricted_area_name }}</span>
-                        {% else %}
-                            <span class="text-muted">Nicio Restricție</span>
-                        {% endif %}
-                    </p>
-                    <p class="mb-1"><strong>Încredere AI:</strong> 
-                        <span class="badge {% if vessel.confidence_score > 80 %}bg-success{% else %}bg-warning text-dark{% endif %}">
-                            {{ vessel.confidence_score }}%
+        <div class="vessel-card" style="animation-delay: {{ forloop.counter0 }}00ms;">
+            <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-3">
+                <div>
+                    <h6 class="fw-bold mb-1">
+                        <i class="bi bi-crosshair text-danger me-2"></i>
+                        Navă #{{ forloop.counter }} — {{ vessel.ship_name }}
+                    </h6>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="coord-tag">
+                            <i class="bi bi-geo-alt"></i>
+                            {{ vessel.latitude|floatformat:4 }}, {{ vessel.longitude|floatformat:4 }}
                         </span>
-                    </p>
+                        {% if vessel.in_restricted_area %}
+                        <span class="zone-tag">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            {{ vessel.restricted_area_name }}
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="col-md-6 ps-4 d-flex flex-column justify-content-center">
-                    <p class="mb-2 fw-bold text-muted small">Actualizare Status Investigație</p>
-                    <form method="POST" class="d-flex align-items-center">
-                        {% csrf_token %}
-                        <input type="hidden" name="vessel_id" value="{{ vessel.id }}">
-                        <select name="status" class="form-select me-2 shadow-sm">
-                            <option value="UNCONFIRMED" {% if vessel.status == 'UNCONFIRMED' %}selected{% endif %}>Neconfirmat</option>
-                            <option value="INVESTIGATING" {% if vessel.status == 'INVESTIGATING' %}selected{% endif %}>În Investigație</option>
-                            <option value="CONFIRMED" {% if vessel.status == 'CONFIRMED' %}selected{% endif %}>Ilegal Confirmat</option>
-                            <option value="FALSE_ALARM" {% if vessel.status == 'FALSE_ALARM' %}selected{% endif %}>Alarmă Falsă</option>
-                        </select>
-                        <button type="submit" class="btn btn-success shadow-sm"><i class="bi bi-check-circle"></i> Salvează</button>
-                    </form>
+                <span class="status-badge status-badge-{{ vessel.status }}">
+                    {% if vessel.status == 'UNCONFIRMED' %}<i class="bi bi-question-circle"></i> Neconfirmat{% endif %}
+                    {% if vessel.status == 'INVESTIGATING' %}<i class="bi bi-search"></i> În Investigație{% endif %}
+                    {% if vessel.status == 'CONFIRMED' %}<i class="bi bi-shield-x"></i> Ilegal Confirmat{% endif %}
+                    {% if vessel.status == 'FALSE_ALARM' %}<i class="bi bi-check-circle"></i> Alarmă Falsă{% endif %}
+                </span>
+            </div>
+
+            <!-- Confidence Bar -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="small text-muted fw-bold">Încredere AI</span>
+                    <span class="small fw-bold">{{ vessel.confidence_score }}%</span>
                 </div>
+                <div class="confidence-bar-wrap">
+                    <div class="confidence-bar" style="width: {{ vessel.confidence_score }}%;"></div>
+                </div>
+            </div>
+
+            <!-- Status Update Form -->
+            <div class="d-flex align-items-center gap-3 flex-wrap pt-2" style="border-top: 1px solid var(--border-glass);">
+                <span class="text-muted small fw-bold">Actualizare status:</span>
+                <form method="POST" class="d-flex align-items-center gap-2 flex-grow-1">
+                    {% csrf_token %}
+                    <input type="hidden" name="vessel_id" value="{{ vessel.id }}">
+                    <select name="status" class="form-select flex-grow-1">
+                        <option value="UNCONFIRMED" {% if vessel.status == 'UNCONFIRMED' %}selected{% endif %}>Neconfirmat</option>
+                        <option value="INVESTIGATING" {% if vessel.status == 'INVESTIGATING' %}selected{% endif %}>În Investigație</option>
+                        <option value="CONFIRMED" {% if vessel.status == 'CONFIRMED' %}selected{% endif %}>Ilegal Confirmat</option>
+                        <option value="FALSE_ALARM" {% if vessel.status == 'FALSE_ALARM' %}selected{% endif %}>Alarmă Falsă</option>
+                    </select>
+                    <button type="submit" class="btn btn-success-gradient px-4 fw-bold text-nowrap">
+                        <i class="bi bi-check-circle-fill me-1"></i> Salvează
+                    </button>
+                </form>
             </div>
         </div>
         {% empty %}
-        <div class="alert alert-info py-4 text-center">Nicio navă nu a fost detectată în acest raport.</div>
+        <div class="vessel-card text-center py-4" style="color: #94a3b8;">
+            <div style="font-size: 3rem; opacity: 0.4; margin-bottom: 0.75rem;">📭</div>
+            <h6 class="fw-bold">Nicio navă detectată în acest raport.</h6>
+        </div>
         {% endfor %}
-        
+
     </div>
 </div>
 {% endblock %}

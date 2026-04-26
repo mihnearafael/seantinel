@@ -21,39 +21,110 @@
         object-fit: contain;
         width: 100%;
     }
+
+    /* ── Leaflet zoom buttons ── */
+    .leaflet-bar a,
+    .leaflet-bar a:hover {
+        background: rgba(15, 23, 42, 0.85) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        color: #e2e8f0 !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-bottom: none !important;
+        width: 36px !important;
+        height: 36px !important;
+        line-height: 36px !important;
+        font-size: 18px !important;
+        font-weight: 700 !important;
+        transition: background 0.2s, color 0.2s !important;
+    }
+    .leaflet-bar a:first-child { border-radius: 12px 12px 0 0 !important; }
+    .leaflet-bar a:last-child  { border-bottom: 1px solid rgba(255,255,255,0.12) !important; border-radius: 0 0 12px 12px !important; }
+    .leaflet-bar a:hover {
+        background: rgba(10, 132, 255, 0.25) !important;
+        color: #0a84ff !important;
+    }
+    .leaflet-bar { border: none !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; border-radius: 14px !important; }
+
+    /* ── Leaflet layer control ── */
+    .leaflet-control-layers {
+        background: rgba(15, 23, 42, 0.85) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4) !important;
+        padding: 6px 2px !important;
+        min-width: 170px;
+    }
+    .leaflet-control-layers-expanded {
+        padding: 10px 14px !important;
+    }
+    .leaflet-control-layers label {
+        color: #e2e8f0 !important;
+        font-family: 'Outfit', sans-serif !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+        cursor: pointer;
+    }
+    .leaflet-control-layers-separator { border-color: rgba(255,255,255,0.12) !important; }
+    .leaflet-control-layers input[type="checkbox"] {
+        accent-color: #0a84ff;
+        width: 15px; height: 15px;
+    }
+
+    /* ── Attribution ── */
+    .leaflet-control-attribution {
+        background: rgba(15, 23, 42, 0.7) !important;
+        backdrop-filter: blur(8px) !important;
+        color: rgba(255,255,255,0.45) !important;
+        border-radius: 8px 0 0 0 !important;
+        font-size: 0.7rem !important;
+        padding: 3px 8px !important;
+        border: none !important;
+    }
+    .leaflet-control-attribution a { color: rgba(10,132,255,0.8) !important; }
 </style>
 
 <div class="row">
     <!-- LEFT PANEL -->
     <div class="col-md-3">
-        <div class="card shadow-sm border-0 mb-4 h-100">
-            <div class="card-header bg-dark text-white fw-bold">
-                <i class="bi bi-radar"></i> Controale Radar
+        <div class="card glass-card mb-4 h-100">
+            <div class="card-header border-0 bg-transparent text-center pt-4 pb-0">
+                <h5 class="fw-bold mb-0" style="letter-spacing: 1px;"><i class="bi bi-radar text-info"></i> CENTRU COMANDĂ</h5>
             </div>
-            <div class="card-body">
-                <p class="mb-1 text-muted small">Sursă Date:</p>
-                <p class="fw-bold text-primary">
-                    <i class="bi bi-globe-europe-africa"></i> Copernicus Sentinel-1
+            <div class="card-body p-4 text-center">
+                <p class="mb-1 text-muted small text-uppercase fw-bold tracking-wide">Sursă Date:</p>
+                <p class="fw-bold fs-5" style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    <i class="bi bi-globe-europe-africa text-info"></i> Copernicus Sentinel-1
                 </p>
 
-                <p class="mb-1 text-muted small">Alerte AI Active:</p>
-                <h2 class="text-danger fw-bold" id="alertsCount">{{ active_alerts }}</h2>
-                <hr>
+                <div class="my-4 p-3 rounded-4" style="background: rgba(0,0,0,0.1); border: 1px solid var(--border-glass);">
+                    <p class="mb-1 text-muted small text-uppercase fw-bold">Alerte AI Active:</p>
+                    <h1 class="text-danger fw-bold display-4 mb-0" id="alertsCount" style="text-shadow: 0 0 20px rgba(220,53,69,0.5);">{{ active_alerts }}</h1>
+                </div>
 
                 {% if user.is_authenticated %}
                 <form id="scanForm" action="{% url 'monitoring:trigger_pipeline' %}" method="POST">
                     {% csrf_token %}
-                    <button id="scanBtn" class="btn btn-danger w-100 fw-bold shadow-sm py-2">
+                    <button id="scanBtn" class="btn btn-danger-gradient w-100 py-3 mb-3" style="font-size: 1.1rem; letter-spacing: 1px;">
                         <i class="bi bi-search"></i> <span id="scanText">SCANEAZĂ NAVE SUSPECTE</span>
                     </button>
                 </form>
                 
-                <button id="generateReportBtn" class="btn btn-success w-100 fw-bold shadow-sm mt-3 py-2 d-none">
+                <button id="generateReportBtn" class="btn btn-success-gradient w-100 py-3 d-none mb-3" style="font-size: 1.1rem; letter-spacing: 1px;">
                     <i class="bi bi-file-earmark-check"></i> GENEREAZĂ RAPORT
                 </button>
                 
+                <div id="detectionsList" class="mt-4 text-start"></div>
+                
                 <div id="scanStatus" class="mt-3 text-center text-info" style="display: none;">
-                    <small><i class="spinner-border spinner-border-sm"></i> Conectare la Colab AI...</small>
+                    <div class="spinner-grow spinner-grow-sm text-info" role="status"></div>
+                    <small class="fw-bold ms-2">Conectare la Colab AI...</small>
                 </div>
                 {% else %}
                 <div class="alert alert-warning py-3 mb-0 text-center shadow-sm">
@@ -72,8 +143,8 @@
 
     <!-- MAP -->
     <div class="col-md-9">
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
+        <div class="card glass-card border-0 h-100">
+            <div class="card-body p-2">
                 <div id="map" style="height: 85vh;"></div>
             </div>
         </div>
@@ -96,13 +167,197 @@ L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}
     attribution: '&copy; CartoDB'
 }).addTo(map);
 
+// GEOJSON OVERLAY
+const forbiddenZones = {
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {"name": "Rezervatia Kaliakra", "type": "No-Take"},
+            "geometry": {"type": "Polygon", "coordinates": [[[28.44, 43.34], [28.48, 43.34], [28.48, 43.38], [28.44, 43.38], [28.44, 43.34]]]}
+        },
+        {
+            "type": "Feature",
+            "properties": {"name": "Gura Veleka", "radius_deg": 0.0045},
+            "geometry": {"type": "Point", "coordinates": [27.9719, 42.0669]}
+        },
+        {
+            "type": "Feature",
+            "properties": {"name": "Gura Ropotamo", "radius_deg": 0.0045},
+            "geometry": {"type": "Point", "coordinates": [27.7563, 42.3277]}
+        },
+        {
+            "type": "Feature",
+            "properties": {"name": "Banca Koketrays", "type": "Natura 2000"},
+            "geometry": {"type": "Polygon", "coordinates": [[[27.58, 42.55], [27.75, 42.55], [27.75, 42.65], [27.58, 42.65], [27.58, 42.55]]]}
+        }
+    ]
+};
+
+const zonesLayer = L.geoJSON(forbiddenZones, {
+    style: function (feature) {
+        return {
+            color: 'red',
+            weight: 2,
+            fillColor: 'red',
+            fillOpacity: 0.15
+        };
+    },
+    pointToLayer: function (feature, latlng) {
+        let radiusDeg = feature.properties.radius_deg || 0.0045;
+        let radiusMeters = radiusDeg * 111000;
+        return L.circle(latlng, {
+            radius: radiusMeters,
+            color: 'red',
+            weight: 2,
+            fillColor: 'red',
+            fillOpacity: 0.15
+        });
+    },
+    onEachFeature: function (feature, layer) {
+        if (feature.properties && feature.properties.name) {
+            layer.bindTooltip(feature.properties.name);
+        }
+    }
+}).addTo(map);
+
+const aisLayer = L.layerGroup().addTo(map);
+const satLayer = L.layerGroup().addTo(map);
+
+const overlays = {
+    "Zone Protejate": zonesLayer,
+    "Date AIS (Nave)": aisLayer,
+    "Date Copernicus (SAR)": satLayer
+};
+
+L.control.layers(null, overlays, {collapsed: false}).addTo(map);
+
 // STATE
 let markers = {};
 let trails = {};
 let lastTrailsData = null;
 let imageCounter = 0;
-let sarMarkers = [];
 let lastScannedShips = [];
+let aisData = {};
+let reportableShips = [];
+
+// GEOMETRY & DETECTION LOGIC
+function pointInPolygon(point, vs) {
+    let x = point[0], y = point[1];
+    let inside = false;
+    for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        let xi = vs[i][0], yi = vs[i][1];
+        let xj = vs[j][0], yj = vs[j][1];
+        let intersect = ((yi > y) != (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3;
+    const p1 = lat1 * Math.PI/180;
+    const p2 = lat2 * Math.PI/180;
+    const dp = (lat2-lat1) * Math.PI/180;
+    const dl = (lon2-lon1) * Math.PI/180;
+    const a = Math.sin(dp/2) * Math.sin(dp/2) +
+              Math.cos(p1) * Math.cos(p2) *
+              Math.sin(dl/2) * Math.sin(dl/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+function isInRestrictedArea(lat, lon) {
+    let point = [lon, lat];
+    for (let feature of forbiddenZones.features) {
+        if (feature.geometry.type === "Polygon") {
+            if (pointInPolygon(point, feature.geometry.coordinates[0])) {
+                return feature.properties.name;
+            }
+        } else if (feature.geometry.type === "Point") {
+            let center = feature.geometry.coordinates;
+            let radiusMeters = (feature.properties.radius_deg || 0.0045) * 111000;
+            if (getDistance(lat, lon, center[1], center[0]) <= radiusMeters) {
+                return feature.properties.name;
+            }
+        }
+    }
+    return false;
+}
+
+function renderDetectionsUI() {
+    let container = document.getElementById('detectionsList');
+    if (!container) return;
+
+    let confirmedHTML = '';
+    let investigateHTML = '';
+    let aisInArea = [];
+    
+    reportableShips = []; // Reset each render
+
+    // Check AIS
+    for (let mmsi in aisData) {
+        let v = aisData[mmsi];
+        let area = isInRestrictedArea(v.lat, v.lon);
+        if (area) {
+            aisInArea.push(v);
+            reportableShips.push({
+                lat: v.lat,
+                lon: v.lon,
+                confidence: 100,
+                status: 'CONFIRMED',
+                ship_name: `Nava AIS ${v.mmsi}`,
+                zone_name: area
+            });
+            confirmedHTML += `
+                <div class="alert alert-danger p-2 border-0 shadow-sm mb-2" style="font-size: 0.85rem;">
+                    <strong><i class="bi bi-shield-x"></i> Ilegal Confirmat</strong><br>
+                    MMSI: ${v.mmsi}<br>
+                    Zonă: ${area}<br>
+                    <span class="badge bg-danger mt-1">AIS Detecție</span>
+                </div>
+            `;
+        }
+    }
+
+    // Check SAR
+    for (let ship of lastScannedShips) {
+        let area = isInRestrictedArea(ship.lat, ship.lon);
+        let overlapAIS = area ? aisInArea.find(v => getDistance(v.lat, v.lon, ship.lat, ship.lon) < 500) : null;
+        
+        if (area && !overlapAIS) {
+            reportableShips.push({
+                lat: ship.lat,
+                lon: ship.lon,
+                confidence: ship.confidence,
+                status: 'INVESTIGATING',
+                ship_name: 'Dark Vessel (SAR)',
+                zone_name: area
+            });
+            investigateHTML += `
+                <div class="alert alert-warning p-2 border-0 shadow-sm mb-2" style="font-size: 0.85rem;">
+                    <strong><i class="bi bi-search"></i> În Investigație</strong><br>
+                    Confidență: ${ship.confidence}%<br>
+                    Zonă: ${area}<br>
+                    <span class="badge bg-warning text-dark mt-1">SAR Fără AIS</span>
+                </div>
+            `;
+        } else if (!overlapAIS) {
+            // Unconfirmed SAR outside restricted area
+            reportableShips.push({
+                lat: ship.lat,
+                lon: ship.lon,
+                confidence: ship.confidence,
+                status: 'UNCONFIRMED',
+                ship_name: 'Dark Vessel (SAR)',
+                zone_name: ''
+            });
+        }
+    }
+
+    container.innerHTML = confirmedHTML + investigateHTML;
+}
 
 // ICON
 function shipIcon(course) {
@@ -115,8 +370,8 @@ function shipIcon(course) {
 function alertIcon() {
     return L.divIcon({
         className: "ship-icon",
-        html: `<div>🔴</div>`,
-        iconSize: [20, 20]
+        html: `<div style="width: 14px; height: 14px; background-color: #0a84ff; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.8);"></div>`,
+        iconSize: [14, 14]
     });
 }
 
@@ -131,12 +386,12 @@ function popup(v) {
 function drawTrail(mmsi, coords) {
     if (!coords || coords.length === 0) return;
     if (trails[mmsi]) {
-        map.removeLayer(trails[mmsi]);
+        aisLayer.removeLayer(trails[mmsi]);
     }
     trails[mmsi] = L.polyline(coords, {
         color: "cyan",
         weight: 3
-    }).addTo(map);
+    }).addTo(aisLayer);
 }
 
 // FETCH TRAILS ONCE (cache it)
@@ -160,11 +415,12 @@ async function update() {
         const data = await res.json();
 
         data.forEach(v => {
+            aisData[v.mmsi] = v;
             if (!markers[v.mmsi]) {
                 markers[v.mmsi] = L.marker([v.lat, v.lon], {
                     icon: shipIcon(v.course)
                 })
-                .addTo(map)
+                .addTo(aisLayer)
                 .bindPopup(popup(v));
 
                 attachClick(v.mmsi);
@@ -242,23 +498,23 @@ document.getElementById('scanForm').addEventListener('submit', async function(e)
             showNotification("Scanare completă: " + data.message, 'success');
             
             // clear old markers
-            sarMarkers.forEach(m => map.removeLayer(m));
-            sarMarkers = [];
+            satLayer.clearLayers();
             lastScannedShips = data.ships || [];
             
             // Add markers for the detected ships
             if(data.ships) {
                 data.ships.forEach(ship => {
-                    let m = L.marker([ship.lat, ship.lon], {icon: shipIcon(0)})
-                        .addTo(map)
+                    L.marker([ship.lat, ship.lon], {icon: alertIcon()})
+                        .addTo(satLayer)
                         .bindPopup(`<b>NAVĂ SUSPECTĂ (SAR)</b><br>Încredere: ${ship.confidence}%`);
-                    sarMarkers.push(m);
                 });
                 // refresh the number of scanned vessels
                 document.getElementById('alertsCount').innerText = data.ships.length;
             } else {
                 document.getElementById('alertsCount').innerText = "0";
             }
+            
+            renderDetectionsUI();
             
             if(lastScannedShips.length > 0) {
                 document.getElementById('generateReportBtn').classList.remove('d-none');
@@ -291,7 +547,7 @@ document.getElementById('generateReportBtn').addEventListener('click', async fun
                 'Content-Type': 'application/json',
                 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
             },
-            body: JSON.stringify({ ships: lastScannedShips })
+            body: JSON.stringify({ ships: reportableShips })
         });
         
         const data = await response.json();
@@ -311,7 +567,9 @@ document.getElementById('generateReportBtn').addEventListener('click', async fun
 
 // INIT
 {% if user.is_authenticated %}
-// Map stays empty until user clicks Scan
+loadTrails();
+setInterval(update, 2000);
+update();
 {% endif %}
 
 </script>

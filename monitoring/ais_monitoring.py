@@ -14,8 +14,39 @@ if API_KEY:
 else:
     print("WARNING: AISSTREAM_API_KEY is not set!")
 
-vessels = {}
-history = {}
+import time
+
+vessels = {
+    207391000: {
+        "mmsi": 207391000,
+        "lat": 43.1957483333333,
+        "lon": 27.9097683333333,
+        "course": 355.9,
+        "speed": 0,
+        "timestamp": time.time()
+    },
+    207391001: {
+        "mmsi": 207391001,
+        "lat": 42.85,
+        "lon": 28.2,
+        "course": 90.0,
+        "speed": 12.5,
+        "timestamp": time.time()
+    },
+    207391002: {
+        "mmsi": 207391002,
+        "lat": 43.35,
+        "lon": 28.46,
+        "course": 180.0,
+        "speed": 5.0,
+        "timestamp": time.time()
+    }
+}
+history = {
+    207391000: [[43.1957483333333, 27.9097683333333]],
+    207391001: [[42.85, 28.2]],
+    207391002: [[43.35, 28.46]]
+}
 MAX_HISTORY = 100
 
 

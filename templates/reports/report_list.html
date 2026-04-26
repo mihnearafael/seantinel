@@ -1,41 +1,84 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3 mt-4">
-    <h2><i class="bi bi-journal-medical text-danger"></i> Rapoarte Incidente</h2>
-</div>
+<style>
+    .report-row {
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: 16px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+        animation: fadeIn 0.4s ease both;
+    }
+    .report-row:hover {
+        transform: translateX(4px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateX(-12px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+    .report-number-badge {
+        width: 48px; height: 48px;
+        background: var(--primary-gradient);
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1.1rem; color: white;
+        flex-shrink: 0;
+    }
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-glass);
+    }
+</style>
 
-<div class="card shadow border-0">
-    <div class="card-body p-0">
-        <table class="table table-hover table-striped mb-0">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID Raport</th>
-                    <th>Generat La</th>
-                    <th>Nave Detectate</th>
-                    <th>Acțiune</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for report in reports %}
-                <tr>
-                    <td><span class="fw-bold">#{{ report.report_number }}</span></td>
-                    <td>{{ report.timestamp|date:"d M Y, H:i" }}</td>
-                    <td><span class="badge bg-secondary">{{ report.vessels.count }} Nave</span></td>
-                    <td>
-                        <a href="{% url 'reports:report_detail' report.id %}" class="btn btn-sm btn-outline-primary">Vezi Raport</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" class="text-center py-5 text-muted">
-                        <i class="bi bi-journal-x fs-1 d-block mb-3"></i>
-                        Niciun raport generat încă. Rulați scanerul AI.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="mt-4">
+    <div class="page-header">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-journal-medical text-danger me-2"></i>Rapoarte Incidente</h3>
+            <p class="text-muted small mb-0">Toate scanările și investigațiile înregistrate în sistem.</p>
+        </div>
+        <a href="{% url 'monitoring:dashboard' %}" class="btn btn-gradient py-2 px-4 fw-bold">
+            <i class="bi bi-plus-lg me-1"></i> Scanare Nouă
+        </a>
     </div>
+
+    {% for report in reports %}
+    <div class="report-row" style="animation-delay: {{ forloop.counter0 }}00ms;">
+        <div class="report-number-badge">#{{ report.report_number }}</div>
+        <div class="flex-grow-1">
+            <div class="fw-bold" style="font-size: 0.95rem;">Raport de Scanare Sentinel-1</div>
+            <div class="text-muted small"><i class="bi bi-clock me-1"></i>{{ report.timestamp|date:"d M Y, H:i" }}</div>
+        </div>
+        <span class="badge rounded-pill px-3 py-2" style="background: rgba(108,117,125,0.15); border: 1px solid rgba(108,117,125,0.3); color: inherit;">
+            <i class="bi bi-ship me-1"></i>{{ report.vessels.count }} Nave
+        </span>
+        <a href="{% url 'reports:report_detail' report.id %}" class="btn btn-gradient py-2 px-4 fw-bold text-nowrap">
+            <i class="bi bi-eye me-1"></i> Detalii
+        </a>
+        <a href="{% url 'reports:download_pdf' report.id %}" class="btn btn-danger-gradient py-2 px-3 fw-bold text-nowrap" title="Descarcă PDF">
+            <i class="bi bi-file-earmark-pdf-fill"></i>
+        </a>
+    </div>
+    {% empty %}
+    <div class="card glass-card text-center py-5" style="color: #94a3b8;">
+        <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.4;">📡</div>
+        <h5 class="fw-bold">Niciun raport generat</h5>
+        <p class="small mb-3">Lansați o scanare SAR din dashboard pentru a genera primul raport.</p>
+        <div>
+            <a href="{% url 'monitoring:dashboard' %}" class="btn btn-gradient py-2 px-4 fw-bold">
+                <i class="bi bi-map me-1"></i> Mergi la Hartă & Scanează
+            </a>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% endblock %}

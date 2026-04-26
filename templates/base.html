@@ -4,53 +4,265 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seantinel - CASSINI Space for Water</title>
+    
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    
     <style>
-        body[data-bs-theme="light"] { background-color: #f4f6f9; }
-        body[data-bs-theme="dark"] { background-color: #121212; }
-        .navbar { background-color: #0b132b !important; }
-        #map {
-            border-radius: 10px;
+        :root {
+            --primary-gradient: linear-gradient(135deg, #0a84ff 0%, #0056b3 100%);
+            --danger-gradient: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            --success-gradient: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --border-glass: rgba(255, 255, 255, 0.1);
+        }
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        
+        body[data-bs-theme="light"] { 
+            background: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 100%);
+            --bg-glass: rgba(255, 255, 255, 0.7);
+            --border-glass: rgba(0, 0, 0, 0.05);
+        }
+        
+        body[data-bs-theme="dark"] { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+        }
+
+        .navbar { 
+            background: rgba(15, 23, 42, 0.8) !important; 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-glass);
+            padding: 15px 0;
+        }
+        
+        .navbar-brand {
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glass-card {
+            background: var(--bg-glass) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15) !important;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25) !important;
+        }
+
+        .btn-gradient {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(10, 132, 255, 0.3);
+        }
+        .btn-gradient:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 20px rgba(10, 132, 255, 0.5);
+            color: white;
+        }
+
+        .btn-danger-gradient {
+            background: var(--danger-gradient);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
+        }
+        .btn-danger-gradient:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 20px rgba(255, 65, 108, 0.5);
+            color: white;
+        }
+
+        .btn-success-gradient {
+            background: var(--success-gradient);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(11, 163, 96, 0.3);
+        }
+        .btn-success-gradient:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 20px rgba(11, 163, 96, 0.5);
+            color: white;
+        }
+
+        #map {
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid var(--border-glass);
+        }
+        
+        /* Modern alerts */
+        .alert {
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-glass);
         }
     </style>
 </head>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <body>
+<style>
+    .nav-pill-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.5rem 1.1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: rgba(255,255,255,0.7) !important;
+        text-decoration: none;
+        transition: background 0.2s, color 0.2s;
+    }
+    .nav-pill-link:hover, .nav-pill-link.active {
+        background: rgba(255,255,255,0.12);
+        color: white !important;
+    }
+    .nav-user-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.4rem 1rem;
+        border-radius: 50px;
+        border: 1px solid rgba(255,255,255,0.15);
+        color: rgba(255,255,255,0.85);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.2s, border 0.2s;
+    }
+    .nav-user-chip:hover {
+        background: rgba(255,255,255,0.1);
+        color: white;
+        border-color: rgba(255,255,255,0.3);
+    }
+    .btn-nav-danger {
+        padding: 0.4rem 1.1rem;
+        border-radius: 50px;
+        border: 1px solid rgba(255,65,108,0.5);
+        color: #ff416c;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: transparent;
+        transition: background 0.2s, color 0.2s;
+        cursor: pointer;
+    }
+    .btn-nav-danger:hover {
+        background: rgba(255,65,108,0.15);
+        color: #ff6b6b;
+        border-color: rgba(255,65,108,0.8);
+    }
+    .btn-nav-primary {
+        padding: 0.4rem 1.1rem;
+        border-radius: 50px;
+        border: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: var(--primary-gradient);
+        color: white;
+        transition: opacity 0.2s, transform 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 2px 10px rgba(10,132,255,0.3);
+    }
+    .btn-nav-primary:hover {
+        opacity: 0.9;
+        transform: scale(1.03);
+        color: white;
+    }
+    #themeToggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.4rem 1rem;
+        border-radius: 50px;
+        border: 1px solid rgba(255,255,255,0.2);
+        background: transparent;
+        color: rgba(255,255,255,0.8);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+    }
+    #themeToggle:hover {
+        background: rgba(255,255,255,0.1);
+        color: white;
+    }
+</style>
 
-<nav class="navbar navbar-expand-lg navbar-dark mb-4 shadow">
-  <div class="container-fluid">
-    <a class="navbar-brand fw-bold" href="{% url 'monitoring:dashboard' %}">
-        <i class="bi bi-satellite-fill text-info"></i> SEANTINEL
+<nav class="navbar navbar-expand-lg navbar-dark mb-4 sticky-top" style="z-index: 1050;">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand fw-bold fs-5 text-decoration-none" href="{% url 'monitoring:dashboard' %}" style="letter-spacing: 2px;">
+        🛰️ SEANTINEL
     </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto">
+      <ul class="navbar-nav me-auto ms-3 d-flex gap-1">
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'monitoring:dashboard' %}"><i class="bi bi-map"></i> Hartă Live</a>
+          <a class="nav-pill-link" href="{% url 'monitoring:dashboard' %}">
+            <i class="bi bi-map-fill"></i> Hartă Live
+          </a>
         </li>
         {% if user.is_authenticated %}
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'reports:report_list' %}"><i class="bi bi-card-list"></i> Rapoarte Alerte</a>
+          <a class="nav-pill-link" href="{% url 'reports:report_list' %}">
+            <i class="bi bi-journal-medical"></i> Rapoarte
+          </a>
         </li>
         {% endif %}
       </ul>
-      <span class="navbar-text d-flex align-items-center">
-        <button id="themeToggle" class="btn btn-outline-light btn-sm me-4">
-            <i class="bi bi-moon-fill"></i> Mod Întunecat
-        </button>
+      <div class="d-flex align-items-center gap-3">
+        <button id="themeToggle"><i class="bi bi-moon-fill"></i> Mod Întunecat</button>
         {% if user.is_authenticated %}
-            <a href="{% url 'users:profile' %}" class="text-light me-3 text-decoration-none"><i class="bi bi-person-badge"></i> Ofițer: {{ user.username }}</a>
-            <a href="{% url 'users:logout' %}" class="btn btn-sm btn-outline-danger">Deconectare</a>
+            <a href="{% url 'users:profile' %}" class="nav-user-chip">
+                <i class="bi bi-person-badge-fill"></i> {{ user.username }}
+            </a>
+            <a href="{% url 'users:logout' %}" class="btn-nav-danger">
+                <i class="bi bi-box-arrow-right"></i> Ieșire
+            </a>
         {% else %}
-            <a href="{% url 'users:login' %}" class="btn btn-sm btn-outline-info">Autentificare Instituție</a>
+            <a href="{% url 'users:login' %}" class="btn-nav-primary">
+                <i class="bi bi-shield-lock-fill"></i> Autentificare
+            </a>
         {% endif %}
-      </span>
+      </div>
     </div>
   </div>
 </nav>
@@ -58,11 +270,19 @@
 <div class="container-fluid px-4">
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm auto-dismiss" role="alert" style="transition: opacity 0.6s ease;">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         {% endfor %}
+        <script>
+            document.querySelectorAll('.auto-dismiss').forEach(function(el) {
+                setTimeout(function() {
+                    el.style.opacity = '0';
+                    setTimeout(function() { el.remove(); }, 600);
+                }, 3500);
+            });
+        </script>
     {% endif %}
 
     {% block content %}
