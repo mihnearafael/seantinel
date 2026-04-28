@@ -106,4 +106,4 @@ LOGIN_URL = '/users/login/'
 LOGOUT_REDIRECT_URL = '/users/login/'
 
 # Google Colab LocalTunnel URL for SAR AI Pipeline
-COLAB_API_URL = os.getenv("COLAB_API_URL", "https://crazy-toys-carry.loca.lt")
+COLAB_API_URL = os.getenv("COLAB_API_URL", "")
