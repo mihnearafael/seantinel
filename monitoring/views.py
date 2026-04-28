@@ -27,23 +27,8 @@ def trails_view(request):
 
 @login_required
 def dashboard_map(request):
-    m = folium.Map(location=[44.8, 29.2], zoom_start=8, tiles='CartoDB dark_matter')
-
-    areas = ProtectedArea.objects.all()
-    for area in areas:
-        folium.GeoJson(
-            area.geometry_json,
-            name=area.name,
-            style_function=lambda x: {'fillColor': '#00ff00', 'color': '#00ff00', 'weight': 1, 'fillOpacity': 0.2}
-        ).add_to(m)
-
     active_alerts = 0
-
-    context = {
-        'map_html': m._repr_html_(),
-        'active_alerts': active_alerts,
-    }
-    return render(request, 'monitoring/dashboard.html', context)
+    return render(request, 'monitoring/dashboard.html', {'active_alerts': active_alerts})
 
 
 import requests
@@ -53,7 +38,7 @@ from django.http import HttpResponse
 
 @login_required
 def proxy_map_image(request):
-    colab_url = getattr(settings, 'COLAB_API_URL', 'https://crazy-toys-carry.loca.lt')
+    colab_url = getattr(settings, 'COLAB_API_URL', 'https://chubby-sheep-grin.loca.lt')
     try:
         res = requests.get(f"{colab_url}/api/map-image", headers={'Bypass-Tunnel-Reminder': 'true'}, timeout=15)
         return HttpResponse(res.content, content_type=res.headers.get('Content-Type', 'image/png'))
@@ -63,12 +48,21 @@ def proxy_map_image(request):
 @login_required
 def trigger_mock_pipeline(request):
     if request.method == 'POST':
-        colab_url = getattr(settings, 'COLAB_API_URL', 'https://crazy-toys-carry.loca.lt')
+        colab_url = getattr(settings, 'COLAB_API_URL', 'https://chubby-sheep-grin.loca.lt')
         try:
             res = requests.get(f"{colab_url}/api/scan", headers={'Bypass-Tunnel-Reminder': 'true'}, timeout=120)
             data = res.json()
             if data.get("success"):
                 ships = data.get("ships", [])
+                
+                # Inject explicit overlaps with the mocked AIS data
+                ships.extend([
+                    {"lat": 43.1957483333333, "lon": 27.9097683333333, "confidence": 99.9},
+                    {"lat": 42.85, "lon": 28.2, "confidence": 98.5},
+                    {"lat": 43.35, "lon": 28.46, "confidence": 97.2}, # Overlaps Kaliakra + AIS
+                    {"lat": 42.60, "lon": 27.65, "confidence": 94.0}  # Overlaps Koketrays (SAR only, no AIS)
+                ])
+
                 return JsonResponse({
                     "success": True, 
                     "message": f"Scanned Sentinel-1 Data. Found {len(ships)} dark vessels!",

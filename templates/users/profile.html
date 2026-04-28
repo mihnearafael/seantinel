@@ -2,70 +2,149 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="row mt-4 justify-content-center">
+<style>
+    .profile-avatar {
+        width: 90px; height: 90px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.5rem;
+        margin: 0 auto 1.2rem;
+        box-shadow: 0 0 30px rgba(10,132,255,0.4);
+        animation: pulse-glow 2.5s infinite;
+    }
+    @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 0 20px rgba(10,132,255,0.4); }
+        50%       { box-shadow: 0 0 40px rgba(10,132,255,0.7); }
+    }
+    .stat-pill {
+        background: rgba(10,132,255,0.1);
+        border: 1px solid rgba(10,132,255,0.2);
+        border-radius: 14px;
+        padding: 0.9rem 1rem;
+        margin-bottom: 0.75rem;
+        transition: background 0.3s;
+    }
+    .stat-pill:hover { background: rgba(10,132,255,0.18); }
+    .stat-pill .label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .stat-pill .value { font-weight: 700; font-size: 1rem; }
+
+    .form-control, .form-select {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid var(--border-glass);
+        border-radius: 12px;
+        padding: 0.7rem 1rem;
+        color: inherit;
+        transition: border 0.3s, box-shadow 0.3s;
+    }
+    .form-control:focus {
+        background: rgba(255,255,255,0.1);
+        border-color: #0a84ff;
+        box-shadow: 0 0 0 3px rgba(10,132,255,0.15);
+        color: inherit;
+    }
+    label { font-weight: 500; font-size: 0.85rem; }
+
+    .report-row {
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: 16px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+        animation: fadeIn 0.4s ease;
+    }
+    .report-row:hover {
+        transform: translateX(4px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateX(-12px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+    .report-number-badge {
+        width: 48px; height: 48px;
+        background: var(--primary-gradient);
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1.1rem; color: white;
+        flex-shrink: 0;
+    }
+</style>
+
+<div class="row mt-4 justify-content-center g-4">
+    <!-- LEFT: Profile Card -->
     <div class="col-md-3">
-        <div class="card shadow border-0 mb-4 h-100">
-            <div class="card-header bg-dark text-white fw-bold">
-                <i class="bi bi-person-circle"></i> Setări Profil
+        <div class="card glass-card h-100 text-center p-4">
+            <div class="profile-avatar">
+                <i class="bi bi-person-badge-fill text-white"></i>
             </div>
-            <div class="card-body d-flex flex-column">
-                <h5 class="card-title text-primary"><i class="bi bi-shield-check"></i> {{ user.username }}</h5>
-                <div class="mt-3">
-                    <p class="mb-1 text-muted small">Instituție:</p>
-                    <p class="fw-bold">{{ user.institution_name|default:"Nespecificat" }}</p>
-                    
-                    <p class="mb-1 text-muted small">Nr. Insignă:</p>
-                    <p class="fw-bold">{{ user.badge_number|default:"Nespecificat" }}</p>
-                </div>
-                
-                <hr class="mt-auto">
-                <h6 class="mb-3 text-muted">Schimbare Parolă</h6>
-                <form method="POST">
-                    {% csrf_token %}
-                    {{ form|crispy }}
-                    <button type="submit" class="btn btn-primary w-100 mt-2">Actualizează Parolă</button>
-                </form>
+            <h5 class="fw-bold mb-3">{{ user.username }}</h5>
+
+
+            <div class="stat-pill text-start">
+                <div class="label">Instituție</div>
+                <div class="value">{{ user.institution_name|default:"Nespecificat" }}</div>
             </div>
+            <div class="stat-pill text-start">
+                <div class="label">Rol</div>
+                <div class="value">{{ user.get_role_display|default:"Nespecificat" }}</div>
+            </div>
+
+            <hr style="border-color: var(--border-glass); margin: 1.5rem 0;">
+            <p class="text-muted small fw-bold text-uppercase mb-3" style="letter-spacing: 0.5px;">Schimbare Parolă</p>
+            <form method="POST">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-gradient w-100 mt-2 py-2 fw-bold">
+                    <i class="bi bi-key-fill me-1"></i> Actualizează
+                </button>
+            </form>
         </div>
     </div>
+
+    <!-- RIGHT: Reports -->
     <div class="col-md-9">
-        <div class="card shadow border-0 h-100">
-            <div class="card-header bg-dark text-white fw-bold">
-                <i class="bi bi-journal-text"></i> Rapoartele Mele Generate
-            </div>
-            <div class="card-body p-0">
-                {% if reports %}
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>ID Raport</th>
-                                <th>Generat La</th>
-                                <th>Nave Detectate</th>
-                                <th>Acțiune</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for report in reports %}
-                            <tr>
-                                <td>#{{ report.report_number }}</td>
-                                <td>{{ report.timestamp|date:"d M Y, H:i" }}</td>
-                                <td><span class="badge bg-secondary">{{ report.vessels.count }} Nave</span></td>
-                                <td><a href="{% url 'reports:report_detail' report.id %}" class="btn btn-sm btn-outline-primary">Vezi Raport</a></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <div class="card glass-card h-100 p-4">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1"><i class="bi bi-journal-medical text-danger me-2"></i>Rapoartele Mele</h4>
+                    <p class="text-muted small mb-0">Istoricul scanărilor și investigațiilor dvs.</p>
                 </div>
-                {% else %}
-                <div class="p-5 text-center text-muted d-flex flex-column align-items-center justify-content-center h-100">
-                    <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                    <h5>Nu ați generat niciun raport încă.</h5>
-                    <p>Scanați zona pentru a detecta nave suspecte.</p>
-                    <a href="{% url 'monitoring:dashboard' %}" class="btn btn-primary mt-2">Mergi la Hartă & Scanează</a>
-                </div>
-                {% endif %}
+                <a href="{% url 'monitoring:dashboard' %}" class="btn btn-gradient py-2 px-4 fw-bold">
+                    <i class="bi bi-plus-lg me-1"></i> Scanare Nouă
+                </a>
             </div>
+
+            {% if reports %}
+                {% for report in reports %}
+                <div class="report-row">
+                    <div class="report-number-badge">#{{ report.report_number }}</div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold" style="font-size: 0.95rem;">Raport de Scanare</div>
+                        <div class="text-muted small"><i class="bi bi-clock me-1"></i>{{ report.timestamp|date:"d M Y, H:i" }}</div>
+                    </div>
+                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(108,117,125,0.15); border: 1px solid rgba(108,117,125,0.3); color: inherit;">
+                        <i class="bi bi-ship me-1"></i>{{ report.vessels.count }} Nave
+                    </span>
+                    <a href="{% url 'reports:report_detail' report.id %}" class="btn btn-gradient py-2 px-4 fw-bold text-nowrap">
+                        <i class="bi bi-eye me-1"></i> Detalii
+                    </a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5" style="color: #94a3b8;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.4;">📡</div>
+                    <h5 class="fw-bold">Niciun raport generat</h5>
+                    <p class="small">Lansați o scanare SAR din dashboard pentru a genera primul raport.</p>
+                    <a href="{% url 'monitoring:dashboard' %}" class="btn btn-gradient mt-2 py-2 px-4 fw-bold">
+                        <i class="bi bi-map me-1"></i> Mergi la Hartă
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>

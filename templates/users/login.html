@@ -2,22 +2,96 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5">
-        <div class="card shadow border-0">
-            <div class="card-header bg-info text-dark text-center py-3">
-                <h4 class="mb-0"><i class="bi bi-shield-check"></i> Authorized Personnel Login</h4>
-            </div>
-            <div class="card-body p-4">
-                <form method="POST">
-                    {% csrf_token %}
-                    {{ form|crispy }}
-                    <button class="btn btn-dark w-100 mt-3" type="submit">Secure Login</button>
-                </form>
-                <div class="text-center mt-3">
-                    <p class="text-muted">Don't have an institution account? <a href="{% url 'users:register' %}">Register here</a></p>
-                </div>
-            </div>
+<style>
+    .auth-wrapper {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .auth-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid var(--border-glass);
+        border-radius: 28px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        width: 100%;
+        max-width: 440px;
+        padding: 2.5rem 2.5rem;
+        animation: slideUp 0.5s ease;
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .auth-icon-wrap {
+        width: 72px; height: 72px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2rem;
+        box-shadow: 0 0 30px rgba(10,132,255,0.4);
+        animation: pulse-glow 2.5s infinite;
+    }
+    @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 0 20px rgba(10,132,255,0.4); }
+        50%       { box-shadow: 0 0 40px rgba(10,132,255,0.7); }
+    }
+    .auth-title {
+        font-weight: 800;
+        font-size: 1.75rem;
+        text-align: center;
+        letter-spacing: -0.5px;
+        margin-bottom: 0.25rem;
+    }
+    .auth-sub {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+    }
+    .form-control, .form-select {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid var(--border-glass);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        color: inherit;
+        transition: border 0.3s, box-shadow 0.3s;
+    }
+    .form-control:focus {
+        background: rgba(255,255,255,0.1);
+        border-color: #0a84ff;
+        box-shadow: 0 0 0 3px rgba(10,132,255,0.15);
+        color: inherit;
+    }
+    label { font-weight: 500; font-size: 0.9rem; margin-bottom: 4px; }
+    .auth-divider { display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0; }
+    .auth-divider hr { flex: 1; border-color: var(--border-glass); }
+    .auth-divider span { color: #94a3b8; font-size: 0.8rem; white-space: nowrap; }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-icon-wrap">
+            <i class="bi bi-shield-lock-fill text-white"></i>
+        </div>
+        <h2 class="auth-title">Bun venit</h2>
+        <p class="auth-sub">Autentificare securizată la Seantinel</p>
+
+        <form method="POST">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button class="btn btn-gradient w-100 py-3 mt-3 fw-bold" type="submit" style="font-size: 1rem; letter-spacing: 0.5px;">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Autentificare
+            </button>
+        </form>
+
+        <div class="auth-divider"><hr><span>sau</span><hr></div>
+
+        <div class="text-center" style="color: #94a3b8; font-size: 0.9rem;">
+            Nu ai cont instituțional? <a href="{% url 'users:register' %}" style="color: #0a84ff; font-weight: 600; text-decoration: none;">Înregistrare</a>
         </div>
     </div>
 </div>
