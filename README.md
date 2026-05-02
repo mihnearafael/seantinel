@@ -1,4 +1,4 @@
-# Seantinel 🌊🛰️
+# SeaNtinel 🌊🛰️
 
 Seantinel is an advanced geospatial monitoring and intelligence platform designed to detect illegal maritime activities, such as illicit fishing and "dark vessels" (ships that have intentionally disabled their transponders). Primarily focused on the Black Sea region, the platform correlates real-time **AIS (Automatic Identification System)** data streams with AI-driven **Satellite Imagery Analysis** (Sentinel-1 SAR) to identify and flag suspicious behaviors, particularly within marine protected areas.
 
