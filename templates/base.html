@@ -16,43 +16,68 @@
     
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #0a84ff 0%, #0056b3 100%);
-            --danger-gradient: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
-            --success-gradient: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
+            --primary-gradient: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            --danger-gradient: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
+            --success-gradient: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
             --bg-glass: rgba(255, 255, 255, 0.03);
             --border-glass: rgba(255, 255, 255, 0.1);
+            --glow-primary: rgba(0, 210, 255, 0.5);
+            --nav-bg: rgba(6, 11, 25, 0.85);
         }
         
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-4px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 10px var(--glow-primary); }
+            50% { box-shadow: 0 0 25px var(--glow-primary); }
+            100% { box-shadow: 0 0 10px var(--glow-primary); }
+        }
+        
+        @keyframes spin { 
+            100% { transform: rotate(360deg); } 
+        }
+
         body {
             font-family: 'Outfit', sans-serif;
             transition: background 0.5s ease, color 0.5s ease;
         }
         
         body[data-bs-theme="light"] { 
-            background: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 100%);
-            --bg-glass: rgba(255, 255, 255, 0.7);
-            --border-glass: rgba(0, 0, 0, 0.05);
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            --bg-glass: rgba(255, 255, 255, 0.8);
+            --border-glass: rgba(0, 0, 0, 0.08);
+            --nav-bg: rgba(255, 255, 255, 0.85);
+            --glow-primary: rgba(58, 123, 213, 0.4);
         }
         
         body[data-bs-theme="dark"] { 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            background: linear-gradient(135deg, #050b14 0%, #0a192f 100%);
             color: #f8fafc;
         }
 
         .navbar { 
-            background: rgba(15, 23, 42, 0.8) !important; 
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            background: var(--nav-bg) !important; 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-glass);
             padding: 15px 0;
+            transition: background 0.5s ease;
         }
         
         .navbar-brand {
             font-weight: 800;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             background: var(--primary-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: floating 3s ease-in-out infinite;
         }
 
         .glass-card {
@@ -225,10 +250,19 @@
     }
 </style>
 
-<nav class="navbar navbar-expand-lg navbar-dark mb-4 sticky-top" style="z-index: 1050;">
+<nav class="navbar navbar-expand-lg mb-4 sticky-top" style="z-index: 1050;" id="mainNav">
   <div class="container-fluid px-4">
-    <a class="navbar-brand fw-bold fs-5 text-decoration-none" href="{% url 'monitoring:dashboard' %}" style="letter-spacing: 2px;">
-        🛰️ SEANTINEL
+    <a class="navbar-brand fw-bold fs-5 text-decoration-none" href="{% url 'monitoring:dashboard' %}">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 22L12 18L22 22L12 2Z" fill="url(#brand-grad)" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+            <defs>
+                <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#00d2ff" />
+                    <stop offset="100%" stop-color="#3a7bd5" />
+                </linearGradient>
+            </defs>
+        </svg>
+        SEANTINEL
     </a>
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
@@ -305,12 +339,17 @@
     });
 
     function updateThemeIcon(theme) {
+        const nav = document.getElementById('mainNav');
         if(theme === 'dark') {
             themeToggle.innerHTML = '<i class="bi bi-sun-fill"></i> Mod Luminos';
             themeToggle.classList.replace('btn-outline-light', 'btn-light');
+            nav.classList.add('navbar-dark');
+            nav.classList.remove('navbar-light');
         } else {
             themeToggle.innerHTML = '<i class="bi bi-moon-fill"></i> Mod Întunecat';
             themeToggle.classList.replace('btn-light', 'btn-outline-light');
+            nav.classList.add('navbar-light');
+            nav.classList.remove('navbar-dark');
         }
     }
 </script>
