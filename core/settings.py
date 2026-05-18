@@ -107,3 +107,6 @@ LOGOUT_REDIRECT_URL = '/users/login/'
 
 # Google Colab LocalTunnel URL for SAR AI Pipeline
 COLAB_API_URL = os.getenv("COLAB_API_URL", "")
+
+# 3. Bind it to a Django setting variable
+LOCAL_FLASK_SERVER_URL = os.getenv('LOCAL_FLASK_SERVER_URL')
