@@ -98,6 +98,19 @@ async def connect_ais_stream():
                     if len(history[mmsi]) > MAX_HISTORY:
                         history[mmsi].pop(0)
 
+                    # Save to Database
+                    from monitoring.models import AISHistory
+                    try:
+                        await AISHistory.objects.acreate(
+                            mmsi=mmsi,
+                            latitude=point["lat"],
+                            longitude=point["lon"],
+                            course=point["course"],
+                            speed=point["speed"]
+                        )
+                    except Exception as db_err:
+                        print(f"Failed to save AIS to DB: {db_err}")
+
         except Exception as e:
             print(f"AIS stream error: {e}")
             await asyncio.sleep(5)

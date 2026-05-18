@@ -137,10 +137,9 @@
                 {% endfor %}
             {% else %}
                 <div class="text-center py-5" style="color: #94a3b8;">
-                    <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.4;">📡</div>
-                    <h5 class="fw-bold">Niciun raport generat</h5>
-                    <p class="small">Lansați o scanare SAR din dashboard pentru a genera primul raport.</p>
-                    <a href="{% url 'monitoring:dashboard' %}" class="btn btn-gradient mt-2 py-2 px-4 fw-bold">
+                    <h5 class="fw-bold mt-2">Niciun raport generat</h5>
+                    <p class="small mb-4">Lansați o scanare SAR din dashboard pentru a genera primul raport.</p>
+                    <a href="{% url 'monitoring:dashboard' %}" class="btn btn-gradient py-2 px-4 fw-bold">
                         <i class="bi bi-map me-1"></i> Mergi la Hartă
                     </a>
                 </div>

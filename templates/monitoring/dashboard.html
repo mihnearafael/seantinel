@@ -7,9 +7,11 @@
 
 <style>
     .ship-icon {
-        font-size: 18px;
-        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         transition: transform 0.2s linear;
+        filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
     }
     #sarCarousel {
         background: #000;
@@ -93,9 +95,9 @@
 <div class="row">
     <!-- LEFT PANEL -->
     <div class="col-md-3">
-        <div class="card glass-card mb-4 h-100">
+        <div class="card glass-card mb-4 h-100" style="animation: pulseGlow 4s infinite alternate;">
             <div class="card-header border-0 bg-transparent text-center pt-4 pb-0">
-                <h5 class="fw-bold mb-0" style="letter-spacing: 1px;"><i class="bi bi-radar text-info"></i> CENTRU COMANDĂ</h5>
+                <h5 class="fw-bold mb-0" style="letter-spacing: 1.5px; text-transform: uppercase;"><i class="bi bi-radar text-info" style="animation: spin 4s linear infinite; display: inline-block;"></i> CENTRU COMANDĂ</h5>
             </div>
             <div class="card-body p-4 text-center">
                 <p class="mb-1 text-muted small text-uppercase fw-bold tracking-wide">Sursă Date:</p>
@@ -363,15 +365,17 @@ function renderDetectionsUI() {
 function shipIcon(course) {
     return L.divIcon({
         className: "ship-icon",
-        html: `<div style="transform: rotate(${course || 0}deg)">🚢</div>`,
-        iconSize: [20, 20]
+        html: `<div style="transform: rotate(${course || 0}deg)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L22 20L12 17L2 20L12 2Z" fill="#ff0844" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg></div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
     });
 }
 function alertIcon() {
     return L.divIcon({
         className: "ship-icon",
-        html: `<div style="width: 14px; height: 14px; background-color: #0a84ff; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.8);"></div>`,
-        iconSize: [14, 14]
+        html: `<div style="width: 16px; height: 16px; background-color: #00d2ff; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px #00d2ff, 0 0 20px #00d2ff; animation: pulseGlow 2s infinite alternate;"></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
     });
 }
 
